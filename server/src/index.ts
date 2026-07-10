@@ -1,18 +1,27 @@
 import "dotenv/config";
 import express from "express";
 import cors from "cors";
+import { clerkMiddleware } from "@clerk/express";
 import { modulesRouter } from "./routes/modules.js";
 import { computersRouter } from "./routes/computers.js";
+import { authSyncRouter } from "./routes/authSync.js";
 
 const app = express();
 
 app.use(cors({ origin: process.env.CLIENT_ORIGIN ?? "http://localhost:5173" }));
 app.use(express.json());
 
+// Verifies the Clerk session token on every request and attaches the
+// result to req.auth (via getAuth(req) in downstream middleware). Does
+// NOT reject unauthenticated requests itself - that's requireAuth's job,
+// so public routes can still opt out.
+app.use(clerkMiddleware());
+
 app.get("/health", (_req, res) => {
   res.json({ status: "ok" });
 });
 
+app.use("/api/auth", authSyncRouter);
 app.use("/api/modules", modulesRouter);
 app.use("/api/computers", computersRouter);
 

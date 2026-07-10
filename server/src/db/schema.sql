@@ -11,6 +11,7 @@ CREATE TYPE machine_status AS ENUM ('good', 'needs_maintenance', 'emergency');
 
 CREATE TABLE organizations (
   id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  clerk_org_id  TEXT UNIQUE,           -- links to Clerk's Organization; NULL until first sync
   name          TEXT NOT NULL,
   plan_tier     plan_tier NOT NULL DEFAULT 'startup',
   max_modules   INTEGER NOT NULL DEFAULT 3,
@@ -18,13 +19,15 @@ CREATE TABLE organizations (
   created_at    TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- Users (admins and technicians), scoped to one organization
+-- Users (admins and technicians), scoped to one organization.
+-- Credentials/sessions live entirely in Clerk - this table only tracks
+-- the app-specific role and org membership tied to a Clerk user id.
 
 CREATE TABLE users (
   id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  clerk_user_id   TEXT NOT NULL UNIQUE,
   organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
   email           TEXT NOT NULL UNIQUE,
-  password_hash   TEXT NOT NULL,
   role            user_role NOT NULL DEFAULT 'technician',
   created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
 );
