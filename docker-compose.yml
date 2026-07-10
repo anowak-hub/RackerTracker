@@ -1,0 +1,17 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: rackertracker-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: rackertracker
+      POSTGRES_PASSWORD: rackertracker_dev
+      POSTGRES_DB: rackertracker
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./server/src/db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+
+volumes:
+  pgdata:
